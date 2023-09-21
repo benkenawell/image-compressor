@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Resizer</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    function humanFileSize(size) {
+      // from stack overflow, forgot which question
+      let i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
+      return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
+    }
+    function draw(img) {
+      const canv = document.querySelector('#canvas');
+      canv.height = img.naturalHeight;
+      canv.width = img.naturalWidth;
+      const ctx = canv.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+    }
+    function downloadFile(url) {
+     const a = document.createElement('a');
+      a.href = url;
+      a.download = 'compressed-file.webp';
+      a.click();
+      a.remove();
+    }
+    function createCompressedBlob() {
+      const compressionValue = parseFloat(document.querySelector('#compression').value);
+      const canvas = document.querySelector('#canvas');
+      return new Promise((res) => {
+        canvas.toBlob(res, 'image/webp', compressionValue);
+      })
+    }
+  </script>
+  <style>
+    p { margin: unset }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Welcome to the Image Resizer test</h1>
+  </header>
+  <main x-data="{files: []}">
+    <input
+      type="file"
+      accept="image/png, image/jpeg, image/webp, image/*"
+      @change="files = $event.target.files"
+    />
+    <template x-for="file in files">
+      <div
+        style="margin: 20px 0"
+        x-data="{blob: file, url: URL.createObjectURL(file)}"
+      >
+        <p>file size is <span x-text="blob.size"></span> bytes, or <span x-text="humanFileSize(blob.size)"</span></p>
+        <p x-show="blob.size >= 10_000_000">file is greater than 10MB</p>
+        <p x-show="blob.size < 10_000_000">file is less than 10MB</p>
+        <!-- for compressing the image -->
+        <canvas id="canvas" hidden></canvas>
+        <label>Compression:
+          <input
+            id="compression"
+            type="number"
+            value="1"
+            max="1"
+            min="0"
+            step=".01"
+            @change.debounce="createCompressedBlob().then(b => { url = URL.createObjectURL(b); blob = b} )"/>
+        </label>
+        <button id="download" @click="downloadFile(url)">Download</button>
+        <img
+          id="image"
+          style="margin: 20px 0; display: block"
+          :src="url"
+          @load="draw($el)"
+        />
+      </div>
+    </template>
+  </main>
+</body>
+</html>
