@@ -1,5 +1,5 @@
 {
-  "name": "image-resizer",
+  "name": "image-compressor",
   "version": "0.0.1",
   "description": "test project for resizing an image",
   "main": "index.js",
